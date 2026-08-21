@@ -32,7 +32,7 @@ func main() {
 			log.Fatal(err)
 		}
 	case "down":
-		if err := m.Down(); err != nil {
+		if err := m.Steps(-1); err != nil {
 			log.Fatal(err)
 		}
 	default:
