@@ -1,16 +1,25 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/amitkumar822/olx-api/internal/config"
+	"github.com/amitkumar822/olx-api/internal/db"
 	"github.com/amitkumar822/olx-api/internal/handlers"
 )
 
 func main() {
 	cfg := config.MustLoad()
+	_, err := db.Connect(cfg.DatabaseUrl)
+	if err != nil {
+		log.Fatalf("main.db.connect: %v", err)
+	}
+
+	fmt.Println(("database connected"))
+	fmt.Println(("starting olx server..."))
 
 	mux := http.NewServeMux()
 
@@ -24,6 +33,7 @@ func main() {
 		IdleTimeout:  time.Second * 60,
 	}
 
+	log.Printf("server is listening on %s", srv.Addr)
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatalf("Server failed %v", err)
 	}
