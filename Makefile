@@ -8,3 +8,9 @@ build:
 # run command acutal go ko run karta hai and run: build (run command ke baad build command iss liye hai ki direct run karte hi saath me build + run ho jaye)
 run: build
 	@./bin/api
+
+migrate-up:
+	@go run ./cmd/migrate up
+
+migrate-down:
+	@go run ./cmd/migrate down
