@@ -25,6 +25,7 @@ func main() {
 
 	mux.HandleFunc("GET /healthz", handlers.Health)
 	mux.HandleFunc("GET /listings", handlers.List(db))
+	mux.HandleFunc("DELETE /listings/{id}", handlers.DeleteListing(db))
 
 	srv := http.Server{
 		Addr:         ":" + cfg.Port,
