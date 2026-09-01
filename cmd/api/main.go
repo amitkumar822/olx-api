@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/amitkumar822/olx-api/internal/config"
@@ -17,6 +19,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("main.db.connect: %v", err)
 	}
+
+	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+		Level:     slog.LevelInfo,
+	})
+
+	logger := slog.New(logHandler)
+	slog.SetDefault(logger)
 
 	fmt.Println(("database connected"))
 	fmt.Println(("starting olx server..."))
