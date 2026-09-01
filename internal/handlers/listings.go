@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
 	"log/slog"
 	"net/http"
 	"time"
@@ -19,12 +18,14 @@ type listing struct {
 }
 
 type ListingHandler struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *slog.Logger
 }
 
-func NewListingHandler(db *sql.DB) *ListingHandler {
+func NewListingHandler(db *sql.DB, logger *slog.Logger) *ListingHandler {
 	return &ListingHandler{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 
@@ -39,7 +40,8 @@ func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
 			ORDER BY created_at DESC
 			LIMIT 100`)
 	if err != nil {
-		log.Printf("query: %v", err)
+		// log.Printf("query: %v", err)
+		lh.logger.Error("listins query error", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -51,16 +53,18 @@ func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var l listing
 		if err := rows.Scan(&l.ID, &l.Title, &l.Description, &l.Price, &l.City, &l.CreatedAt); err != nil {
-			log.Printf("rows.scan: %v", err)
+			lh.logger.Error("rows scan error", "err", err)
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
+
+		lh.logger.Info("listings fetched", "total", len(listings))
 
 		listings = append(listings, l)
 	}
 
 	if err := rows.Err(); err != nil {
-		log.Printf("rows.err: %v", err)
+		lh.logger.Error("rows error", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -77,17 +81,16 @@ func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
 
-	slog.Debug("debug log", "listing_id", id)
-	slog.Info("starting query", "listing_id", id)
-	slog.Warn("warn log", "listing_id", id)
+	// lh.logger.Debug("debug log", "listing_id", id)
+	// lh.logger.Info("starting query", "listing_id", id)
+	// lh.logger.Warn("warn log", "listing_id", id)
 
 	_, err := lh.db.ExecContext(ctx,
-		`DELETE FROM listings1 WHERE id =$1`, id)
+		`DELETE FROM listings WHERE id =$1`, id)
 
 	if err != nil {
 		// log.Printf("delete: %v", err)
-
-		slog.Error("delete failed", "listing_id", id, "error", err)
+		lh.logger.Error("delete failed", "listing_id", id, "error", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
