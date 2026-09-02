@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/amitkumar822/olx-api/internal/httpx"
 	"github.com/amitkumar822/olx-api/internal/middleware"
 )
 
@@ -81,20 +82,16 @@ func (lh ListingHandler) List(w http.ResponseWriter, r *http.Request) {
 func (lh ListingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	// request scoped context
 	ctx := r.Context()
-	// requestId := ctx.Value("requestCtxId").(string)
 	requestId := middleware.RequestIDFromContext(ctx)
 	id := r.PathValue("id")
-
-	// lh.logger.Debug("debug log", "listing_id", id)
-	// lh.logger.Info("starting query", "listing_id", id)
-	// lh.logger.Warn("warn log", "listing_id", id)
 
 	_, err := lh.db.ExecContext(ctx,
 		`DELETE FROM listings1 WHERE id =$1`, id)
 
 	if err != nil {
 		lh.logger.Error("delete failed", "listing_id", id, "request_id", requestId, "error", err)
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		// http.Error(w, "internal error", http.StatusInternalServerError)
+		httpx.Error(w, http.StatusInternalServerError, "Something went wrong", httpx.CodeInternalError)
 		return
 	}
 
